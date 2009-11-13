@@ -51,7 +51,9 @@
 )
 
 (defn repl-post [request]
-"Handles a post to /repl"
+"Handles a post to /repl, simply doing a read and then eval of the
+relevant string passed in the request parameter. Doesn't handle the
+exceptions potentially thrown by read or eval"
   (let [in (:in (:form-params request))
         out (str (eval (read-string in)))
        ]

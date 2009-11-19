@@ -52,10 +52,6 @@
   )
 )
 
-(defn my-read [a b]
-  "Just This"
-)
-
 (defn repl-with
   "Start a REPL with *in*, *out* and *err* bound to the streams given
    as arguments"
@@ -85,7 +81,7 @@
 (defroutes clojure-web
   (GET "/" (html [:h1 "Clojure " [:a {:href"/repl"} "REPL"]]))
   (GET "/repl" repl-get)
-  (POST "/repl" repl-post-alt)
+  (POST "/repl" repl-post)
 )
 
 

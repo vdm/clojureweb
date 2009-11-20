@@ -39,13 +39,27 @@
   {:body (html-repl @history-items)}
 )
 
+(defn read-eval [expr-str]
+  (let [out (StringWriter.)
+        err-writer (StringWriter.)
+        err (PrintWriter. err-writer)
+        result (try (binding [*out* out, *err* err]
+                             (eval (read-string expr-str))
+                    )
+                    (catch Exception e (.println err e))
+               )
+       ]
+       [result (str out) (str err-writer)]
+  )
+)
+
 (defn repl-post [request]
 "Handles a post to /repl, simply doing a read and then eval of the
  relevant string passed in the request parameter. Doesn't handle the
  exceptions potentially thrown by read or eval"
   (let [expr (:expr (:form-params request))
-        result (str (eval (read-string expr)))
-	new-item (struct history-item expr result)
+        [result out error] (read-eval expr)
+	new-item (struct history-item expr result out error)
 	history (swap! history-items conj new-item)
        ]
     {:body (html-repl history)}

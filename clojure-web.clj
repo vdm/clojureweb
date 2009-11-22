@@ -40,13 +40,15 @@
 )
 
 (defn read-eval [expr-str]
+"Returns a triple of strings giving the result, and any output to
+ stdout or stderr when expr-str is read and evalutated"
   (let [out (StringWriter.)
         err-writer (StringWriter.)
         err (PrintWriter. err-writer)
-        result (try (binding [*out* out, *err* err]
-                             (eval (read-string expr-str))
-                    )
-                    (catch Exception e (.println err e))
+        result (binding [*out* out, *err* err]
+                        (try (eval (read-string expr-str))
+                             (catch Exception e (.println err e))
+                        )
                )
        ]
        [result (str out) (str err-writer)]

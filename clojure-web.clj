@@ -18,31 +18,6 @@
 ; a list of history-items
 (def history-items (atom ()))
 
-(defn repl-with
-  "Start a REPL with *in*, *out* and *err* bound to the streams given
-   as arguments"
-  [{:keys [in out err] :or {in *in* out *out* err *err*}}]
-  (binding [*in* in
-            *out* out
-            *err* err]
-    (clojure.main/repl)
-  )
-)
-
-(defn repl-post-alt [request]
-"Alternative method of handling a post to /repl, uses clojure.main/repl
- via repl-with function"
-  (let [expr (:expr (:form-params request))
-        in (PushbackReader. (StringReader. expr))
-        out (StringWriter.)
-        err-writer (StringWriter.)
-        err (PrintWriter. err-writer)]
-    (repl-with {:in in :out out :err err}) 
-    (swap! history-items
-	conj (struct history-item expr (str out) (str err-writer)))
-    {:body (html-repl @history-items)}
-  )
-)
 (defn html-history-item [{:keys [expr result out err]}]
   (html [:div {:id "result"} [:p (str expr " = " result)]]
 	[:div {:id "out"} [:p out]]

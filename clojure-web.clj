@@ -18,10 +18,15 @@
 ; a list of history-items
 (def history-items (atom ()))
 
+(defn add-links [expr-str]
+
+)
+
 (defn html-history-item [{:keys [expr result out err]}]
-  (html [:div {:id "result"} [:p (str expr " = " result)]]
-	[:div {:id "out"} [:p out]]
-	[:div {:id "err"} [:p err]]
+  (html [:tr [:td {:rowspan "2" :valign "top"} expr ]
+             [:td {:rowspan "2" :valign "top"} (escape-html result)]
+             [:td [:pre (escape-html out)]]]
+        [:tr [:td [:pre (escape-html err)]]]
   )
 )
 
@@ -30,7 +35,9 @@
           [:input {:type "text", :name "expr"}]
           [:input {:type "submit", :value "Submit"}]
         ]
-        (map html-history-item history)
+        [:table {:cellpadding "10"}
+          (map html-history-item history)
+        ]
   )
 )
 
@@ -52,7 +59,9 @@
                         )
                )
        ]
-       [result (str out) (str err-writer)]
+       ; note use of pr-str, this prints a clojure object in a form
+       ; which is readable by the read function 
+       [(pr-str result) (str out) (str err-writer)]
   )
 )
 
@@ -69,11 +78,17 @@
   )
 )
 
+(defn all-ns-get [request]
+"Returns a list of all namespaces currently seen by this process"
+  (map ns-name (all-ns))
+)
+
 
 (defroutes clojure-web
   (GET "/" (html [:h1 "Clojure " [:a {:href"/repl"} "REPL"]]))
   (GET "/repl" repl-get)
   (POST "/repl" repl-post)
+  (GET "/all-ns" all-ns-get)
 )
 
 

@@ -4,6 +4,32 @@
   (:use compojure)
 )
 
+(defn repl-with
+  "Start a REPL with *in*, *out* and *err* bound to the streams given
+   as arguments"
+  [{:keys [in out err] :or {in *in* out *out* err *err*}}]
+  (binding [*in* in
+            *out* out
+            *err* err]
+    (clojure.main/repl)
+  )
+)
+
+(defn repl-post-alt [request]
+"Alternative method of handling a post to /repl, uses clojure.main/repl
+ via repl-with function"
+  (let [expr (:expr (:form-params request))
+        in (PushbackReader. (StringReader. expr))
+        out (StringWriter.)
+        err-writer (StringWriter.)
+        err (PrintWriter. err-writer)]
+    (repl-with {:in in :out out :err err}) 
+    (swap! history-items
+	conj (struct history-item expr (str out) (str err-writer)))
+    {:body (html-repl @history-items)}
+  )
+)
+
 ;(def in-str "")
 ;(def in (PushbackReader. (StringReader. in-str)))
 ;(def out (StringWriter. ))
@@ -41,7 +67,7 @@
 
 (defn read-eval [expr-str]
 "Returns a triple of strings giving the result, and any output to
- stdout or stderr when expr-str is read and evalutated"
+ stdout or stderr when expr-str is read and evaluated"
   (let [out (StringWriter.)
         err-writer (StringWriter.)
         err (PrintWriter. err-writer)
@@ -68,31 +94,6 @@
   )
 )
 
-(defn repl-with
-  "Start a REPL with *in*, *out* and *err* bound to the streams given
-   as arguments"
-  [{:keys [in out err] :or {in *in* out *out* err *err*}}]
-  (binding [*in* in
-            *out* out
-            *err* err]
-    (clojure.main/repl)
-  )
-)
-
-(defn repl-post-alt [request]
-"Alternative method of handling a post to /repl, uses clojure.main/repl
- via repl-with function"
-  (let [expr (:expr (:form-params request))
-        in (PushbackReader. (StringReader. expr))
-        out (StringWriter.)
-        err-writer (StringWriter.)
-        err (PrintWriter. err-writer)]
-    (repl-with {:in in :out out :err err}) 
-    (swap! history-items
-	conj (struct history-item expr (str out) (str err-writer)))
-    {:body (html-repl @history-items)}
-  )
-)
 
 (defroutes clojure-web
   (GET "/" (html [:h1 "Clojure " [:a {:href"/repl"} "REPL"]]))
@@ -107,3 +108,4 @@
 )
 
 (run)
+

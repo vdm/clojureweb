@@ -4,6 +4,20 @@
   (:use compojure)
 )
 
+
+;(def in-str "")
+;(def in (PushbackReader. (StringReader. in-str)))
+;(def out (StringWriter. ))
+;(def err-str-writer (StringWriter. ))
+;(def err (PrintWriter. err-str-writer))
+
+; records a string (:expr) along with the result of its evaluation by
+; repl, and anything written to *out* or *err* 
+(defstruct history-item :expr :result :out :err)
+
+; a list of history-items
+(def history-items (atom ()))
+
 (defn repl-with
   "Start a REPL with *in*, *out* and *err* bound to the streams given
    as arguments"
@@ -29,20 +43,6 @@
     {:body (html-repl @history-items)}
   )
 )
-
-;(def in-str "")
-;(def in (PushbackReader. (StringReader. in-str)))
-;(def out (StringWriter. ))
-;(def err-str-writer (StringWriter. ))
-;(def err (PrintWriter. err-str-writer))
-
-; records a string (:expr) along with the result of its evaluation by
-; repl, and anything written to *out* or *err* 
-(defstruct history-item :expr :result :out :err)
-
-; a list of history-items
-(def history-items (atom ()))
-
 (defn html-history-item [{:keys [expr result out err]}]
   (html [:div {:id "result"} [:p (str expr " = " result)]]
 	[:div {:id "out"} [:p out]]

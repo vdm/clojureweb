@@ -4,13 +4,6 @@
   (:use compojure)
 )
 
-
-;(def in-str "")
-;(def in (PushbackReader. (StringReader. in-str)))
-;(def out (StringWriter. ))
-;(def err-str-writer (StringWriter. ))
-;(def err (PrintWriter. err-str-writer))
-
 ; records a string (:expr) along with the result of its evaluation by
 ; repl, and anything written to *out* or *err* 
 (defstruct history-item :expr :result :out :err)
@@ -78,17 +71,52 @@
   )
 )
 
-(defn all-ns-get [request]
-"Returns a list of all namespaces currently seen by this process"
-  (map ns-name (all-ns))
+(defn html-ns [base-uri, ns]
+  (let [name (str (ns-name ns))]
+    (html [:li [:a {:href (str base-uri "/" name)} name]])
+  )
 )
 
+(defn all-ns-get [request]
+"Returns a list of all namespaces currently seen by this process"
+  (let [uri (:uri request)]
+    (html [:ol (map (partial html-ns uri) (all-ns))])
+  )
+)
+
+(defn ns-get [request]
+  (let [ns (find-ns (symbol (:* (:route-params request))))
+        interns (ns-interns ns)
+        uri (:uri request)]
+    (html [:h1 (ns-name ns)]
+          [:ol (for [sym (keys interns)]
+                    [:li [:a {:href (str uri "/" sym) } (str sym)]])
+          ])
+  )
+)
+
+(defmulti html-var (fn [var] (type (var-get var)))) 
+
+(defmethod html-var clojure.lang.IFn [f-var]
+  (escape-html ^f-var) 
+)
+
+(defn symbol-get [request]
+  (let [[ns-str, sym-str] (:* (:route-params request))
+         sym (symbol sym-str)
+         ns (find-ns (symbol ns-str))]
+    (html-var (ns-resolve ns sym)) 
+    ;{:body (str (:uri request) " symbol: " sym " namespace: " ns-str)}
+  )
+)
 
 (defroutes clojure-web
   (GET "/" (html [:h1 "Clojure " [:a {:href"/repl"} "REPL"]]))
   (GET "/repl" repl-get)
   (POST "/repl" repl-post)
-  (GET "/all-ns" all-ns-get)
+  (GET "/ns" all-ns-get)
+  (GET "/ns/*/*" symbol-get)
+  (GET "/ns/*" ns-get)
 )
 
 
@@ -98,4 +126,3 @@
 )
 
 (run)
-

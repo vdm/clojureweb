@@ -102,20 +102,29 @@
 )
 
 (defn linked-meta-map [m]
-  (let [all-substitutors
+  (let [m-esc (zipmap (keys m) (map #(escape-html (str %)) (vals m)))
+        all-substitutors
           {:ns #(html [:a {:href (ns-uri %)} (ns-name %)])
-           :file #(str %)}
+           :doc #(html [:pre %])}
         some-substitutors (select-keys all-substitutors (keys m))
         substitute #((some-substitutors %) (m %))
         substitutions (map substitute (keys some-substitutors))] 
-    (merge m (zipmap (keys some-substitutors) substitutions))
+    (merge m-esc (zipmap (keys some-substitutors) substitutions))
+  )
+)
+
+(defn html-map [m]
+"Converts a map to a html definition list"
+  (let [dts (map #(vector :dt (str %)) (keys m))
+        dds (map #(vector :dd %) (vals m))]
+    (html [:dl (interleave dts dds)])
   )
 )
 
 (defmulti html-var (fn [var] (type (var-get var)))) 
 
 (defmethod html-var clojure.lang.IFn [f-var]
-  (:ns (linked-meta-map ^f-var))
+  (html-map (linked-meta-map ^f-var))
 )
 
 (defn symbol-get [request]

@@ -95,18 +95,18 @@
   )
 )
 
-(defn ns-uri [ns-name]
+(defn ns-uri [ns]
 "Given a namespace name the function returns the uri for the namespace" 
-  (str "/ns/" ns-name)
+  (str "/ns/" (ns-name ns))
 )
 
 (defn linked-meta-map [m]
-  ;(let [matchers {:ns #(str "/ns/" (ns-name %))}] 
-  ;)
-  (let [name (ns-name (:ns m))
-        ;linked-keys {:ns (html [:a {:href name} name])}
-       ]
-    {:ns (html [:a {:href (ns-uri name)} name])}
+  (let [substitutors
+          {:ns #(html [:a {:href (ns-uri %)} (ns-name %)])}
+         ;(select-keys (keys m) substitutors) 
+       ] 
+    {:ns ((:ns substitutors) (:ns m))}
+    ;(merge m linked-metadata) 
   )
 )
 

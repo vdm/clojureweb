@@ -95,10 +95,25 @@
   )
 )
 
+(defn ns-uri [ns-name]
+"Given a namespace name the function returns the uri for the namespace" 
+  (str "/ns/" ns-name)
+)
+
+(defn linked-meta-map [m]
+  ;(let [matchers {:ns #(str "/ns/" (ns-name %))}] 
+  ;)
+  (let [name (ns-name (:ns m))
+        ;linked-keys {:ns (html [:a {:href name} name])}
+       ]
+    {:ns (html [:a {:href (ns-uri name)} name])}
+  )
+)
+
 (defmulti html-var (fn [var] (type (var-get var)))) 
 
 (defmethod html-var clojure.lang.IFn [f-var]
-  (escape-html ^f-var) 
+  (:ns (linked-meta-map ^f-var))
 )
 
 (defn symbol-get [request]
@@ -106,7 +121,6 @@
          sym (symbol sym-str)
          ns (find-ns (symbol ns-str))]
     (html-var (ns-resolve ns sym)) 
-    ;{:body (str (:uri request) " symbol: " sym " namespace: " ns-str)}
   )
 )
 

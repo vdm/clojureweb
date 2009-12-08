@@ -119,12 +119,10 @@
   )
 )
 
-(defmulti html-var (fn [var] (type (var-get var)))) 
-
-(defmethod html-var clojure.lang.IFn [f-var]
-  (let [name (:name ^f-var)
-        full-name (symbol (str (ns-name (:ns ^f-var)) "/" name))
-        metadata (html-map (format-meta-map ^f-var)) ]
+(defn html-var [var]
+  (let [name (:name ^var)
+        full-name (symbol (str (ns-name (:ns ^var)) "/" name))
+        metadata (html-map (format-meta-map ^var)) ]
     (html [:body [:h1 name]
                  (html-map {(html [:h3 "Metadata"]) metadata,
                             (html [:h3 "Source"])

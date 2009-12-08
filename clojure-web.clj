@@ -99,13 +99,13 @@
 
 (defn format-meta-map [m]
   (let [m-esc (zipmap (keys m) (map #(escape-html (str %)) (vals m)))
-        all-substitutors
+        all-formatters
           {:ns #(html [:a {:href (ns-uri %)} (ns-name %)])
            :doc #(html [:pre %])}
-        some-substitutors (select-keys all-substitutors (keys m))
-        substitute #((some-substitutors %) (m %))
-        substitutions (map substitute (keys some-substitutors))] 
-    (merge m-esc (zipmap (keys some-substitutors) substitutions))
+        some-formatters (select-keys all-formatters (keys m))
+        apply-format #((some-formatters %) (m %))
+        formatted-values (map apply-format (keys some-formatters))] 
+    (merge m-esc (zipmap (keys some-formatters) formatted-values))
   )
 )
 

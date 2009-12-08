@@ -1,7 +1,8 @@
-(ns hello-www
+(ns clojure-web 
   (:import (java.io PushbackReader StringReader
                     StringWriter PrintWriter))
-  (:use compojure compojure.encodings)
+  (:use compojure compojure.encodings
+        [clojure.contrib.repl-utils :only (get-source)])
 )
 
 ; records a string (:expr) along with the result of its evaluation by
@@ -76,7 +77,8 @@
 (defn all-ns-get [request]
 "Returns a list of all namespaces currently seen by this process"
   (let [uri (:uri request)]
-    (html [:ol (map (partial html-ns uri) (all-ns))])
+    (html [:ol (map (partial html-ns uri)
+                    (sort-by #(ns-name %) (all-ns)))])
   )
 )
 
@@ -112,7 +114,7 @@
 (defn html-map [m]
 "Converts a map to a html definition list"
   (let [dts (map #(vector :dt (str %)) (keys m))
-        dds (map #(vector :dd %) (vals m))]
+        dds (map #(vector :dd (str %)) (vals m))]
     (html [:dl (interleave dts dds)])
   )
 )
@@ -120,7 +122,15 @@
 (defmulti html-var (fn [var] (type (var-get var)))) 
 
 (defmethod html-var clojure.lang.IFn [f-var]
-  (html-map (format-meta-map ^f-var))
+  (let [name (:name ^f-var)
+        full-name (symbol (str (ns-name (:ns ^f-var)) "/" name))
+        metadata (html-map (format-meta-map ^f-var)) ]
+    (html [:body [:h1 name]
+                 (html-map {(html [:h3 "Metadata"]) metadata,
+                            (html [:h3 "Source"])
+                                  (html [:pre (get-source full-name)])})
+          ]) 
+  )
 )
 
 (defn symbol-get [request]

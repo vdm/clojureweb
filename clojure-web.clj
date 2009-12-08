@@ -1,7 +1,7 @@
 (ns hello-www
   (:import (java.io PushbackReader StringReader
                     StringWriter PrintWriter))
-  (:use compojure)
+  (:use compojure compojure.encodings)
 )
 
 ; records a string (:expr) along with the result of its evaluation by
@@ -10,10 +10,6 @@
 
 ; a list of history-items
 (def history-items (atom ()))
-
-(defn add-links [expr-str]
-
-)
 
 (defn html-history-item [{:keys [expr result out err]}]
   (html [:tr [:td {:rowspan "2" :valign "top"} expr ]
@@ -89,8 +85,8 @@
         interns (ns-interns ns)
         uri (:uri request)]
     (html [:h1 (ns-name ns)]
-          [:ol (for [sym (keys interns)]
-                    [:li [:a {:href (str uri "/" sym) } (str sym)]])
+          [:ol (for [sym-str (map str (keys interns))]
+                    [:li [:a {:href (str uri "/" (urlencode sym-str))                                        } sym-str]])
           ])
   )
 )
@@ -101,7 +97,7 @@
   (str "/ns/" (ns-name ns))
 )
 
-(defn linked-meta-map [m]
+(defn format-meta-map [m]
   (let [m-esc (zipmap (keys m) (map #(escape-html (str %)) (vals m)))
         all-substitutors
           {:ns #(html [:a {:href (ns-uri %)} (ns-name %)])
@@ -124,7 +120,7 @@
 (defmulti html-var (fn [var] (type (var-get var)))) 
 
 (defmethod html-var clojure.lang.IFn [f-var]
-  (html-map (linked-meta-map ^f-var))
+  (html-map (format-meta-map ^f-var))
 )
 
 (defn symbol-get [request]

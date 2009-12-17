@@ -1,4 +1,4 @@
-(ns clojure-web 
+(ns ie.vdm.clojure-web 
   (:import (java.io PushbackReader StringReader
                     StringWriter PrintWriter))
   (:use compojure compojure.encodings
@@ -123,10 +123,8 @@
   (let [name (:name ^var)
         full-name (symbol (str (ns-name (:ns ^var)) "/" name))
         metadata (html-map (format-meta-map ^var)) ]
-    (html [:body [:h1 name]
-                 (html-map {(html [:h3 "Metadata"]) metadata,
-                            (html [:h3 "Source"])
-                                  (html [:pre (get-source full-name)])})
+    (html [:body [:h1 name] [:pre (get-source full-name)]
+                 (html-map {(html [:h3 "Metadata"]) metadata})
           ]) 
   )
 )

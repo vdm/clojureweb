@@ -1,4 +1,4 @@
-(ns ie.vdm.clojure-web 
+(ns clojure-web 
   (:import (java.io PushbackReader StringReader
                     StringWriter PrintWriter))
   (:use compojure compojure.encodings
